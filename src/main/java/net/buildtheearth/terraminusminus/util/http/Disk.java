@@ -53,7 +53,7 @@ public class Disk {
     private final Path CACHE_ROOT;
     private final Path TMP_FILE;
 
-    private final Set<PosixFilePermission> PERMS = new HashSet<>(Arrays.asList(PosixFilePermission.OWNER_EXECUTE, PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE));
+    private final Set<PosixFilePermission> PERMS = new HashSet<>(Arrays.asList(PosixFilePermission.OTHERS_EXECUTE, PosixFilePermission.OTHERS_READ, PosixFilePermission.OTHERS_WRITE));
 
     static {
         File mcRoot = new File(".");
@@ -112,6 +112,7 @@ public class Disk {
 
                 Files.move(TMP_FILE, file, StandardCopyOption.REPLACE_EXISTING);
                 Files.setLastModifiedTime(file, FileTime.fromMillis(System.currentTimeMillis()));
+                Files.setPosixFilePermissions(file, PERMS);
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             } finally {
