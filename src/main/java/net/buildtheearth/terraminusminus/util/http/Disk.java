@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -111,9 +112,6 @@ public class Disk {
 
                 Files.move(TMP_FILE, file, StandardCopyOption.REPLACE_EXISTING);
                 Files.setLastModifiedTime(file, FileTime.fromMillis(System.currentTimeMillis()));
-                //Files.setPosixFilePermissions(file, PERMS);
-                Files.getPosixFilePermissions(file).forEach(perm -> TerraMinusMinus.LOGGER.info("Cache perm {}", perm.name()));
-                TerraMinusMinus.LOGGER.info("Cache owner {}", Files.getOwner(file).getName());
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             } finally {
@@ -184,7 +182,14 @@ public class Disk {
                         count.increment();
                         size.add(Files.size(path));
                     })
-                    .forEach((IOConsumer<Path>) Files::delete);
+                    .forEach((IOConsumer<Path>) file -> {
+                        try {
+                            Files.delete(file);
+                        } catch (AccessDeniedException ex) {
+                            TerraMinusMinus.LOGGER.warn("unable to delete {}, access denied!", file.getFileName());
+                        };
+                    });
+
         } catch (Throwable e) {
             TerraMinusMinus.LOGGER.error("exception occurred during cache cleanup!", e);
         } finally {
