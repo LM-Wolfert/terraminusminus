@@ -53,8 +53,6 @@ public class Disk {
     private final Path CACHE_ROOT;
     private final Path TMP_FILE;
 
-    private final Set<PosixFilePermission> PERMS = new HashSet<>(Arrays.asList(PosixFilePermission.OTHERS_EXECUTE, PosixFilePermission.OTHERS_READ, PosixFilePermission.OTHERS_WRITE));
-
     static {
         File mcRoot = new File(".");
         CACHE_ROOT = PFiles.ensureDirectoryExists(new File(mcRoot, "terraplusplus/cache")).toPath();
@@ -175,7 +173,6 @@ public class Disk {
                             //delete file
                             count.increment();
                             size.add(chSize);
-                            channel.close();
                             return true;
                         }
                     })
@@ -185,10 +182,11 @@ public class Disk {
                     })
                     .forEach((IOConsumer<Path>) file -> {
                         try {
+                            TerraMinusMinus.LOGGER.info("Is writable {}", Files.isWritable(file));
                             Files.delete(file);
                         } catch (AccessDeniedException ex) {
                             TerraMinusMinus.LOGGER.warn("unable to delete {}, access denied!", file.getFileName());
-                            TerraMinusMinus.LOGGER.info(ex.getLocalizedMessage());
+                            TerraMinusMinus.LOGGER.info(ex.getReason());
                         };
                     });
 
