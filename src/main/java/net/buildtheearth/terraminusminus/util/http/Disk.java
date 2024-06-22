@@ -154,7 +154,6 @@ public class Disk {
         LongAdder size = new LongAdder();
 
         long now = System.currentTimeMillis();
-        //
 
         try (Stream<Path> stream = Files.list(CACHE_ROOT)) {
             stream.filter(Files::isRegularFile)
@@ -189,6 +188,7 @@ public class Disk {
                             Files.delete(file);
                         } catch (AccessDeniedException ex) {
                             TerraMinusMinus.LOGGER.warn("unable to delete {}, access denied!", file.getFileName());
+                            TerraMinusMinus.LOGGER.info(ex.getLocalizedMessage());
                         };
                     });
 
