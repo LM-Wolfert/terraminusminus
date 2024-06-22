@@ -31,8 +31,8 @@ repositories {
         url = "https://repo.spongepowered.org/maven"
     }
     maven { // For bukkit api bindings
-        name = "SpigotMC"
-        url = "https://hub.spigotmc.org/nexus/content/repositories/snapshots/"
+        name = "PaperMC"
+        url = "https://repo.papermc.io/repository/maven-public/"
     }
 }
 
@@ -69,7 +69,7 @@ dependencies {
     annotationProcessor "org.projectlombok:lombok:1.18.22"
 
     // Bindings to other projects
-    compileOnly "org.spigotmc:spigot-api:1.18.1-R0.1-SNAPSHOT"
+    compileOnly "https://repo.papermc.io/repository/maven-public/"
 
 }
 
