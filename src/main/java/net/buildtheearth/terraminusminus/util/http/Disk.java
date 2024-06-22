@@ -60,6 +60,11 @@ public class Disk {
     static {
         File mcRoot = new File(".");
         CACHE_ROOT = PFiles.ensureDirectoryExists(new File(mcRoot, "terraplusplus/cache")).toPath();
+        try {
+            Files.setPosixFilePermissions(CACHE_ROOT, PERMS);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
         TMP_FILE = CACHE_ROOT.resolve("tmp");
         PFiles.rm(TMP_FILE.toFile()); //delete temp file if it exists
