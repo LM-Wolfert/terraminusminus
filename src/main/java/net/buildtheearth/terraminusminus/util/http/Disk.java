@@ -112,8 +112,8 @@ public class Disk {
                 Files.move(TMP_FILE, file, StandardCopyOption.REPLACE_EXISTING);
                 Files.setLastModifiedTime(file, FileTime.fromMillis(System.currentTimeMillis()));
                 //Files.setPosixFilePermissions(file, PERMS);
-                Files.getPosixFilePermissions(file).forEach(System.out::println);
-                System.out.println(Files.getOwner(file).getName());
+                Files.getPosixFilePermissions(file).forEach(perm -> TerraMinusMinus.LOGGER.info("Cache perm {}", perm.name()));
+                TerraMinusMinus.LOGGER.info("Cache owner {}", Files.getOwner(file).getName());
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             } finally {
