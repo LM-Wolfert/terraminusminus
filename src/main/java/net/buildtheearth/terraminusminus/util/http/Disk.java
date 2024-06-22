@@ -27,8 +27,12 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.FileTime;
+import java.nio.file.attribute.PosixFilePermission;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.LongAdder;
@@ -47,6 +51,8 @@ public class Disk {
 
     private final Path CACHE_ROOT;
     private final Path TMP_FILE;
+
+    private final Set<PosixFilePermission> PERMS = new HashSet<>(Arrays.asList(PosixFilePermission.OWNER_EXECUTE, PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE));
 
     static {
         File mcRoot = new File(".");
@@ -105,6 +111,7 @@ public class Disk {
 
                 Files.move(TMP_FILE, file, StandardCopyOption.REPLACE_EXISTING);
                 Files.setLastModifiedTime(file, FileTime.fromMillis(System.currentTimeMillis()));
+                Files.setPosixFilePermissions(file, PERMS);
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             } finally {
