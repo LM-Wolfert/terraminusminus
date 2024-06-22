@@ -112,7 +112,6 @@ public class Disk {
 
                 Files.move(TMP_FILE, file, StandardCopyOption.REPLACE_EXISTING);
                 Files.setLastModifiedTime(file, FileTime.fromMillis(System.currentTimeMillis()));
-                Files.setPosixFilePermissions(file, PERMS);
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             } finally {
@@ -176,6 +175,7 @@ public class Disk {
                             //delete file
                             count.increment();
                             size.add(chSize);
+                            channel.close();
                             return true;
                         }
                     })
