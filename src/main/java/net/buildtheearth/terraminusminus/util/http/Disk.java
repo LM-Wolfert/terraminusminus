@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.channels.FileChannel;
+import java.nio.channels.SeekableByteChannel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
@@ -55,16 +56,9 @@ public class Disk {
     private final Path CACHE_ROOT;
     private final Path TMP_FILE;
 
-    private final Set<PosixFilePermission> PERMS = PosixFilePermissions.fromString("rwxrwxrwx");
-
     static {
         File mcRoot = new File(".");
         CACHE_ROOT = PFiles.ensureDirectoryExists(new File(mcRoot, "terraplusplus/cache")).toPath();
-        try {
-            Files.setPosixFilePermissions(CACHE_ROOT, PERMS);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
 
         TMP_FILE = CACHE_ROOT.resolve("tmp");
         PFiles.rm(TMP_FILE.toFile()); //delete temp file if it exists
@@ -119,7 +113,6 @@ public class Disk {
 
                 Files.move(TMP_FILE, file, StandardCopyOption.REPLACE_EXISTING);
                 Files.setLastModifiedTime(file, FileTime.fromMillis(System.currentTimeMillis()));
-                Files.setPosixFilePermissions(file, PERMS);
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             } finally {
@@ -190,7 +183,11 @@ public class Disk {
                         count.increment();
                         size.add(Files.size(path));
                     })
-                    .forEach((IOConsumer<Path>) Files::delete);
+                    .forEach((IOConsumer<Path>) path -> {
+                        SeekableByteChannel channel = Files.newByteChannel(path);
+                        channel.close();
+                        Files.delete(path);
+                    });
 
         } catch (Throwable e) {
             TerraMinusMinus.LOGGER.error("exception occurred during cache cleanup!", e);
