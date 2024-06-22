@@ -27,8 +27,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
+import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.FileTime;
 import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
@@ -52,6 +54,8 @@ public class Disk {
 
     private final Path CACHE_ROOT;
     private final Path TMP_FILE;
+
+    private final Set<PosixFilePermission> PERMS = PosixFilePermissions.fromString("rwxrwxrwx");
 
     static {
         File mcRoot = new File(".");
@@ -110,6 +114,7 @@ public class Disk {
 
                 Files.move(TMP_FILE, file, StandardCopyOption.REPLACE_EXISTING);
                 Files.setLastModifiedTime(file, FileTime.fromMillis(System.currentTimeMillis()));
+                Files.setPosixFilePermissions(file, PERMS);
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             } finally {
@@ -180,15 +185,7 @@ public class Disk {
                         count.increment();
                         size.add(Files.size(path));
                     })
-                    .forEach((IOConsumer<Path>) file -> {
-                        try {
-                            TerraMinusMinus.LOGGER.info("Is writable {}", Files.isWritable(file));
-                            Files.delete(file);
-                        } catch (AccessDeniedException ex) {
-                            TerraMinusMinus.LOGGER.warn("unable to delete {}, access denied!", file.getFileName());
-                            TerraMinusMinus.LOGGER.info(ex.getReason());
-                        };
-                    });
+                    .forEach((IOConsumer<Path>) Files::delete);
 
         } catch (Throwable e) {
             TerraMinusMinus.LOGGER.error("exception occurred during cache cleanup!", e);
