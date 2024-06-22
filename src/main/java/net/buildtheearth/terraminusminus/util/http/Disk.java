@@ -21,7 +21,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.channels.FileChannel;
-import java.nio.channels.SeekableByteChannel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
@@ -161,7 +160,7 @@ public class Disk {
                         try (FileChannel channel = FileChannel.open(p, StandardOpenOption.READ)) {
                             long chSize = channel.size();
                             try {
-                                ByteBuf buf = PUnpooled.wrap(channel.map(FileChannel.MapMode.READ_ONLY, 0L, chSize), toInt(chSize), true);
+                                ByteBuf buf = PUnpooled.wrap(channel.map(FileChannel.MapMode.READ_WRITE, 0L, chSize), toInt(chSize), true);
                                 try {
                                     if (buf.readByte() == CacheEntry.CACHE_VERSION && !new CacheEntry(buf).isExpired(now)) { //file isn't expired, skip it
                                         return false;
@@ -183,11 +182,7 @@ public class Disk {
                         count.increment();
                         size.add(Files.size(path));
                     })
-                    .forEach((IOConsumer<Path>) path -> {
-                        SeekableByteChannel channel = Files.newByteChannel(path);
-                        channel.close();
-                        Files.delete(path);
-                    });
+                    .forEach((IOConsumer<Path>) Files::delete);
 
         } catch (Throwable e) {
             TerraMinusMinus.LOGGER.error("exception occurred during cache cleanup!", e);
