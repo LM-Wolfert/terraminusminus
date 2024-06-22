@@ -5,7 +5,7 @@ plugins {
 }
 
 compileJava {
-    sourceCompatibility = targetCompatibility = "17"
+    sourceCompatibility = targetCompatibility = "21"
     options.compilerArgs << '--add-exports=java.desktop/sun.awt.image=ALL-UNNAMED'
 }
 
@@ -83,5 +83,9 @@ publishing {
             from components.java
         }
     }
+}
+
+java {
+    toolchain.languageVersion.set(JavaLanguageVersion.of(21))
 }
 
