@@ -3,8 +3,14 @@ package net.buildtheearth.terraminusminus.dataset.geojson.dataset;
 import static net.daporkchop.lib.common.util.PorkUtil.uncheckedCast;
 
 import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
+import io.netty.util.internal.ConcurrentSet;
 import lombok.NonNull;
 import net.buildtheearth.terraminusminus.dataset.IDataset;
 import net.buildtheearth.terraminusminus.dataset.IElementDataset;
@@ -40,9 +46,15 @@ public class TiledGeoJsonDataset extends TiledDataset<GeoJsonObject[]> implement
                 .map(this::getAsync)
                 .toArray(CompletableFuture[]::new));
 
-        return CompletableFuture.allOf(futures).thenApply(unused ->
-                Arrays.stream(futures)
-                        .map(CompletableFuture::join)
-                        .toArray(GeoJsonObject[][]::new));
+        return CompletableFuture.allOf(futures).thenApply(unused -> {
+            ConcurrentLinkedQueue<GeoJsonObject[]> completedFuturesList = new ConcurrentLinkedQueue<>();
+            try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+                Arrays.stream(futures).forEach(future -> executor.submit(() -> completedFuturesList.add(future.join())));
+                executor.awaitTermination(1L, TimeUnit.MINUTES);
+                return completedFuturesList.toArray(GeoJsonObject[][]::new);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 }
